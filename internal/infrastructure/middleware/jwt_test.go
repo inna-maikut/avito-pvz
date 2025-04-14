@@ -23,7 +23,7 @@ func TestCreateNoAuthMiddleware(t *testing.T) {
 			name: "validation_required",
 			check: func(t *testing.T, mw func(next http.Handler) http.Handler) {
 				called := false
-				next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				next := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 					called = true
 				})
 				handler := mw(next)
@@ -40,7 +40,7 @@ func TestCreateNoAuthMiddleware(t *testing.T) {
 			name: "pass_no_auth",
 			check: func(t *testing.T, mw func(next http.Handler) http.Handler) {
 				called := false
-				next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				next := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 					called = true
 				})
 				handler := mw(next)
@@ -77,12 +77,12 @@ func TestCreateAuthMiddleware(t *testing.T) {
 	}{
 		{
 			name: "validation_required",
-			prepare: func(t *testing.T, m *mocks) {
+			prepare: func(_ *testing.T, m *mocks) {
 				m.tokenProvider.EXPECT().ParseToken("asdf").Return(model.TokenInfo{}, nil)
 			},
 			check: func(t *testing.T, mw func(next http.Handler) http.Handler) {
 				called := false
-				next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				next := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 					called = true
 				})
 				handler := mw(next)
@@ -98,10 +98,10 @@ func TestCreateAuthMiddleware(t *testing.T) {
 		},
 		{
 			name:    "forbidden_no_header",
-			prepare: func(t *testing.T, m *mocks) {},
+			prepare: func(_ *testing.T, _ *mocks) {},
 			check: func(t *testing.T, mw func(next http.Handler) http.Handler) {
 				called := false
-				next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				next := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 					called = true
 				})
 				handler := mw(next)

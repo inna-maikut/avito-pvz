@@ -12,7 +12,7 @@ import (
 )
 
 func TestProvider_CreateToken(t *testing.T) {
-	var secret = "secret"
+	secret := "secret"
 
 	type args struct {
 		email  string
@@ -87,7 +87,7 @@ func TestProvider_CreateToken(t *testing.T) {
 }
 
 func TestProvider_ParseToken(t *testing.T) {
-	var secret = "secret"
+	secret := "secret"
 	exp := time.Now().Add(time.Hour * 72).Unix()
 
 	tests := []struct {
@@ -99,7 +99,6 @@ func TestProvider_ParseToken(t *testing.T) {
 		{
 			name: "success.moderator",
 			getToken: func(t *testing.T) string {
-
 				claims := jwt.MapClaims{
 					"email":  "email",
 					"userID": 123,
@@ -123,7 +122,6 @@ func TestProvider_ParseToken(t *testing.T) {
 		{
 			name: "success.employee",
 			getToken: func(t *testing.T) string {
-
 				claims := jwt.MapClaims{
 					"email":  "email",
 					"userID": 123,
@@ -147,7 +145,6 @@ func TestProvider_ParseToken(t *testing.T) {
 		{
 			name: "err.wrong_sign",
 			getToken: func(t *testing.T) string {
-
 				claims := jwt.MapClaims{
 					"email":  "email",
 					"userID": 123,

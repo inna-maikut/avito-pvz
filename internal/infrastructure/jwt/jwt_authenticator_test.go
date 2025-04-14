@@ -28,7 +28,7 @@ func TestContext(t *testing.T) {
 	})
 
 	t.Run("empty_if_has_key_empty_struct", func(t *testing.T) {
-		tokenInfo := TokenInfoFromContext(context.WithValue(context.Background(), struct{}{}, model.TokenInfo{UserID: 1}))
+		tokenInfo := TokenInfoFromContext(context.WithValue(context.Background(), struct{}{}, model.TokenInfo{UserID: 1})) //nolint:staticcheck
 		assert.Equal(t, model.TokenInfo{}, tokenInfo)
 	})
 }
@@ -77,7 +77,7 @@ func TestAuthenticate(t *testing.T) {
 	}{
 		{
 			name: "success",
-			args: func(t *testing.T) args {
+			args: func(_ *testing.T) args {
 				req := httptest.NewRequest(http.MethodGet, "/", nil)
 				req.Header.Set("Authorization", "asdf")
 				return args{
@@ -90,7 +90,7 @@ func TestAuthenticate(t *testing.T) {
 					},
 				}
 			},
-			prepare: func(t *testing.T, m *mocks) {
+			prepare: func(_ *testing.T, m *mocks) {
 				m.tokenProvider.EXPECT().ParseToken("asdf").Return(model.TokenInfo{UserID: 1}, nil)
 			},
 			check: func(t *testing.T, args args) {
@@ -101,7 +101,7 @@ func TestAuthenticate(t *testing.T) {
 		},
 		{
 			name: "error.invalid_security_scheme",
-			args: func(t *testing.T) args {
+			args: func(_ *testing.T) args {
 				req := httptest.NewRequest(http.MethodGet, "/", nil)
 				req.Header.Set("Authorization", "asdf")
 				return args{
@@ -119,7 +119,7 @@ func TestAuthenticate(t *testing.T) {
 		},
 		{
 			name: "error.parse_token",
-			args: func(t *testing.T) args {
+			args: func(_ *testing.T) args {
 				req := httptest.NewRequest(http.MethodGet, "/", nil)
 				req.Header.Set("Authorization", "asdf")
 				return args{
@@ -131,7 +131,7 @@ func TestAuthenticate(t *testing.T) {
 					},
 				}
 			},
-			prepare: func(t *testing.T, m *mocks) {
+			prepare: func(_ *testing.T, m *mocks) {
 				m.tokenProvider.EXPECT().ParseToken("asdf").Return(model.TokenInfo{}, assert.AnError)
 			},
 			check:   func(_ *testing.T, _ args) {},
