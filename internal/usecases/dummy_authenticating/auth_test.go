@@ -11,6 +11,20 @@ import (
 	"github.com/inna-maikut/avito-pvz/internal/model"
 )
 
+func TestNew(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		res, err := New(NewMocktokenProvider(ctrl))
+		require.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+	t.Run("error.first_nil", func(t *testing.T) {
+		res, err := New(nil)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+}
+
 func TestUseCase_Auth(t *testing.T) {
 	type mocks struct {
 		tokenProvider *MocktokenProvider

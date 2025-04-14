@@ -8,10 +8,30 @@ import (
 	"time"
 
 	trmsqlx "github.com/avito-tech/go-transaction-manager/drivers/sqlx/v2"
+	"github.com/jmoiron/sqlx"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/inna-maikut/avito-pvz/internal/model"
 )
+
+func TestNewProductRepository(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		res, err := NewProductRepository(&sqlx.DB{}, &trmsqlx.CtxGetter{})
+		require.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+	t.Run("error.first_nil", func(t *testing.T) {
+		res, err := NewProductRepository(nil, &trmsqlx.CtxGetter{})
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+	t.Run("error.second_nil", func(t *testing.T) {
+		res, err := NewProductRepository(&sqlx.DB{}, nil)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+}
 
 func TestProductRepository_Create(t *testing.T) {
 	db := setUp(t)

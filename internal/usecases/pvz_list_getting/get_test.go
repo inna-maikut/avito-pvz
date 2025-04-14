@@ -12,6 +12,33 @@ import (
 	"github.com/inna-maikut/avito-pvz/internal/model"
 )
 
+func TestNew(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		res, err := New(NewMockpvzRepo(ctrl), NewMockreceptionRepo(ctrl), NewMockproductRepo(ctrl))
+		require.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+	t.Run("error.first_nil", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		res, err := New(nil, NewMockreceptionRepo(ctrl), NewMockproductRepo(ctrl))
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+	t.Run("error.second_nil", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		res, err := New(NewMockpvzRepo(ctrl), nil, NewMockproductRepo(ctrl))
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+	t.Run("error.third_nil", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		res, err := New(NewMockpvzRepo(ctrl), NewMockreceptionRepo(ctrl), nil)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+}
+
 func TestUseCase_GetPVZList(t *testing.T) {
 	type mocks struct {
 		pvzRepo       *MockpvzRepo

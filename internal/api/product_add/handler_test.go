@@ -16,6 +16,26 @@ import (
 	"github.com/inna-maikut/avito-pvz/internal/model"
 )
 
+func TestNew(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		res, err := New(NewMockproductAdding(ctrl), zap.NewNop())
+		require.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+	t.Run("error.first_nil", func(t *testing.T) {
+		res, err := New(nil, zap.NewNop())
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+	t.Run("error.second_nil", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		res, err := New(NewMockproductAdding(ctrl), nil)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+}
+
 func TestHandler_Handle_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	useCaseMock := NewMockproductAdding(ctrl)
