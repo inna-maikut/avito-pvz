@@ -11,10 +11,6 @@ import (
 	"github.com/inna-maikut/avito-pvz/internal/model"
 )
 
-type tokenProvider interface {
-	ParseToken(tokenStr string) (model.TokenInfo, error)
-}
-
 type tokenContextKey struct{}
 
 var ErrNoAuthHeader = errors.New("authorization header is missing")

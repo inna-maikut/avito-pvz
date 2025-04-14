@@ -32,11 +32,13 @@ func NewProviderFromEnv() (*Provider, error) {
 		return nil, errors.New("env JWT_SECRET is empty")
 	}
 
-	provider := &Provider{
+	return New(secret), nil
+}
+
+func New(secret string) *Provider {
+	return &Provider{
 		secret: []byte(secret),
 	}
-
-	return provider, nil
 }
 
 func (p *Provider) CreateToken(email string, userID int64, role model.UserRole) (string, error) {
@@ -80,14 +82,18 @@ func (p *Provider) ParseToken(tokenStr string) (model.TokenInfo, error) {
 		return model.TokenInfo{}, ErrInvalidUsernameInJWTToken
 	}
 
-	role, ok := claims["role"].(string)
+	rawRole, ok := claims["role"].(string)
 	if !ok {
+		return model.TokenInfo{}, ErrInvalidRoleInJWTToken
+	}
+	role := model.UserRole(rawRole)
+	if !role.Valid() {
 		return model.TokenInfo{}, ErrInvalidRoleInJWTToken
 	}
 
 	return model.TokenInfo{
 		UserID:   int64(userID),
 		Email:    username,
-		UserRole: model.UserRole(role),
+		UserRole: role,
 	}, nil
 }

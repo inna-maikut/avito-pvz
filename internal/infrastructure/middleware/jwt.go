@@ -9,12 +9,7 @@ import (
 
 	"github.com/inna-maikut/avito-pvz/internal/api"
 	"github.com/inna-maikut/avito-pvz/internal/infrastructure/jwt"
-	"github.com/inna-maikut/avito-pvz/internal/model"
 )
-
-type tokenProvider interface {
-	ParseToken(tokenStr string) (model.TokenInfo, error)
-}
 
 func CreateNoAuthMiddleware() (func(next http.Handler) http.Handler, error) {
 	spec, err := api.GetSwagger()

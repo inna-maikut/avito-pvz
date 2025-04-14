@@ -31,10 +31,10 @@ test-repository:
 	go test --tags integration ./internal/repository
 
 test-total-cover-no-integration:
-	go test ./... -coverprofile cover.out && go tool cover -func cover.out && rm cover.out
+	go test ./... -coverprofile cover.out && sed -i '' '/^github\.com\/inna-maikut\/avito-pvz\/internal\/api\/gen\.go/d' cover.out && go tool cover -func cover.out && rm cover.out
 
 test-total-cover:
-	go test --tags integration ./... -coverprofile cover.out && go tool cover -func cover.out && rm cover.out
+	go test --tags integration ./... -coverprofile cover.out && sed -i '' '/^github\.com\/inna-maikut\/avito-pvz\/internal\/api\/gen\.go/d' cover.out && go tool cover -func cover.out && rm cover.out
 
 tidy:
 	go mod tidy
