@@ -38,7 +38,7 @@ const (
 	readHeaderTimeout = time.Second
 )
 
-func main() {
+func main() { //nolint:gocognit
 	cfg := config.Load()
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -52,7 +52,7 @@ func TestProductRepository_Create(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Equal(t, receptionID1.UUID(), product.ReceptionID)
-				require.Equal(t, int64(model.ProductCategoryElectronics), product.Category)
+				require.Equal(t, int16(model.ProductCategoryElectronics), product.Category)
 				require.Equal(t, product.ID, res.ID.UUID())
 				require.Equal(t, receptionID1, res.ReceptionID)
 				require.Equal(t, model.ProductCategoryElectronics, res.Category)

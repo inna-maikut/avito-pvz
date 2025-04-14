@@ -128,7 +128,7 @@ func TestReceptionRepository_Create(t *testing.T) {
 				require.NoError(t, err)
 
 				require.Equal(t, ID1.UUID(), reception.PVZID)
-				require.Equal(t, int64(model.ReceptionStatusInProgress), reception.Status)
+				require.Equal(t, int16(model.ReceptionStatusInProgress), reception.Status)
 				require.Equal(t, reception.ID, res.ID.UUID())
 				require.Equal(t, ID1, res.PVZID)
 				require.Equal(t, model.ReceptionStatusInProgress, res.ReceptionStatus)
@@ -202,7 +202,7 @@ func TestReceptionRepository_SetStatus(t *testing.T) {
 				err = db.Get(&reception, "SELECT id, pvz_id, status, recepted_at FROM receptions WHERE id = $1", receptionID)
 				require.NoError(t, err)
 
-				require.Equal(t, int64(model.ReceptionStatusClose), reception.Status)
+				require.Equal(t, int16(model.ReceptionStatusClose), reception.Status)
 			},
 			wantErr: nil,
 		},
