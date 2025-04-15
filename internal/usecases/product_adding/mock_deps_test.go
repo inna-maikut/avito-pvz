@@ -266,3 +266,63 @@ func (c *MockpvzLockerLockCall) DoAndReturn(f func(context.Context, model.PVZID)
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
+
+// Mockmetrics is a mock of metrics interface.
+type Mockmetrics struct {
+	ctrl     *gomock.Controller
+	recorder *MockmetricsMockRecorder
+	isgomock struct{}
+}
+
+// MockmetricsMockRecorder is the mock recorder for Mockmetrics.
+type MockmetricsMockRecorder struct {
+	mock *Mockmetrics
+}
+
+// NewMockmetrics creates a new mock instance.
+func NewMockmetrics(ctrl *gomock.Controller) *Mockmetrics {
+	mock := &Mockmetrics{ctrl: ctrl}
+	mock.recorder = &MockmetricsMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *Mockmetrics) EXPECT() *MockmetricsMockRecorder {
+	return m.recorder
+}
+
+// ProductAddedCountInc mocks base method.
+func (m *Mockmetrics) ProductAddedCountInc() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ProductAddedCountInc")
+}
+
+// ProductAddedCountInc indicates an expected call of ProductAddedCountInc.
+func (mr *MockmetricsMockRecorder) ProductAddedCountInc() *MockmetricsProductAddedCountIncCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProductAddedCountInc", reflect.TypeOf((*Mockmetrics)(nil).ProductAddedCountInc))
+	return &MockmetricsProductAddedCountIncCall{Call: call}
+}
+
+// MockmetricsProductAddedCountIncCall wrap *gomock.Call
+type MockmetricsProductAddedCountIncCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockmetricsProductAddedCountIncCall) Return() *MockmetricsProductAddedCountIncCall {
+	c.Call = c.Call.Return()
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockmetricsProductAddedCountIncCall) Do(f func()) *MockmetricsProductAddedCountIncCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockmetricsProductAddedCountIncCall) DoAndReturn(f func()) *MockmetricsProductAddedCountIncCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}

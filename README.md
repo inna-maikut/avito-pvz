@@ -38,3 +38,12 @@ docker-compose up
 - Должен ли ендпоинт `GET /pvz` фильтровать по статусу приемки?
 
 Нет, клиент сам может отфильтровать результаты по статусу.
+
+## Дополнительные требования
+
+* [x] Метрики prometheus. Prometheus сервер поднят на порту 9000 (по умолчанию),
+записываются бизнес-метрики `pvz_registered_count`, `reception_created_count`, `product_added_count counter`
+и технические метрики `http_requests_total` и `http_response_time`
+с разбиением по лейблам `endpoint` и `status_code`.
+
+`

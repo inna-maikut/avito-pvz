@@ -12,9 +12,10 @@ type UseCase struct {
 	trManager     trManager
 	receptionRepo receptionRepo
 	pvzLocker     pvzLocker
+	metric        metrics
 }
 
-func New(trManager trManager, receptionRepo receptionRepo, pvzLocker pvzLocker) (*UseCase, error) {
+func New(trManager trManager, receptionRepo receptionRepo, pvzLocker pvzLocker, metric metrics) (*UseCase, error) {
 	if trManager == nil {
 		return nil, errors.New("trManager is nil")
 	}
@@ -24,11 +25,15 @@ func New(trManager trManager, receptionRepo receptionRepo, pvzLocker pvzLocker) 
 	if pvzLocker == nil {
 		return nil, errors.New("pvzLocker is nil")
 	}
+	if metric == nil {
+		return nil, errors.New("metric is nil")
+	}
 
 	return &UseCase{
 		trManager:     trManager,
 		receptionRepo: receptionRepo,
 		pvzLocker:     pvzLocker,
+		metric:        metric,
 	}, nil
 }
 
@@ -59,6 +64,8 @@ func (uc *UseCase) CreateReception(ctx context.Context, pvzID model.PVZID) (mode
 	if err != nil {
 		return model.Reception{}, fmt.Errorf("trManager.Do: %w", err)
 	}
+
+	uc.metric.ReceptionCreatedCountInc()
 
 	return reception, nil
 }

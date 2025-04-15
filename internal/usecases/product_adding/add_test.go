@@ -15,31 +15,37 @@ import (
 func TestNew(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		res, err := New(NewMocktrManager(ctrl), NewMockreceptionRepo(ctrl), NewMockpvzLocker(ctrl), NewMockproductRepo(ctrl))
+		res, err := New(NewMocktrManager(ctrl), NewMockreceptionRepo(ctrl), NewMockpvzLocker(ctrl), NewMockproductRepo(ctrl), NewMockmetrics(ctrl))
 		require.NoError(t, err)
 		assert.NotNil(t, res)
 	})
 	t.Run("error.first_nil", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		res, err := New(nil, NewMockreceptionRepo(ctrl), NewMockpvzLocker(ctrl), NewMockproductRepo(ctrl))
+		res, err := New(nil, NewMockreceptionRepo(ctrl), NewMockpvzLocker(ctrl), NewMockproductRepo(ctrl), NewMockmetrics(ctrl))
 		require.Error(t, err)
 		require.Nil(t, res)
 	})
 	t.Run("error.second_nil", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		res, err := New(NewMocktrManager(ctrl), nil, NewMockpvzLocker(ctrl), NewMockproductRepo(ctrl))
+		res, err := New(NewMocktrManager(ctrl), nil, NewMockpvzLocker(ctrl), NewMockproductRepo(ctrl), NewMockmetrics(ctrl))
 		require.Error(t, err)
 		require.Nil(t, res)
 	})
 	t.Run("error.third_nil", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		res, err := New(NewMocktrManager(ctrl), NewMockreceptionRepo(ctrl), nil, NewMockproductRepo(ctrl))
+		res, err := New(NewMocktrManager(ctrl), NewMockreceptionRepo(ctrl), nil, NewMockproductRepo(ctrl), NewMockmetrics(ctrl))
 		require.Error(t, err)
 		require.Nil(t, res)
 	})
 	t.Run("error.fourth_nil", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		res, err := New(NewMocktrManager(ctrl), NewMockreceptionRepo(ctrl), NewMockpvzLocker(ctrl), nil)
+		res, err := New(NewMocktrManager(ctrl), NewMockreceptionRepo(ctrl), NewMockpvzLocker(ctrl), nil, NewMockmetrics(ctrl))
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+	t.Run("error.fifth_nil", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		res, err := New(NewMocktrManager(ctrl), NewMockreceptionRepo(ctrl), NewMockpvzLocker(ctrl), NewMockproductRepo(ctrl), nil)
 		require.Error(t, err)
 		require.Nil(t, res)
 	})
@@ -51,6 +57,7 @@ func TestUseCase_AddProduct(t *testing.T) {
 		receptionRepo *MockreceptionRepo
 		productRepo   *MockproductRepo
 		pvzLocker     *MockpvzLocker
+		metric        *Mockmetrics
 	}
 	type args struct {
 		pvzID    model.PVZID
@@ -96,6 +103,7 @@ func TestUseCase_AddProduct(t *testing.T) {
 						Category:    model.ProductCategoryElectronics,
 						AddedAt:     now,
 					}, nil)
+				m.metric.EXPECT().ProductAddedCountInc()
 			},
 			args: args{
 				pvzID:    ID1,
@@ -213,11 +221,12 @@ func TestUseCase_AddProduct(t *testing.T) {
 				receptionRepo: NewMockreceptionRepo(ctrl),
 				productRepo:   NewMockproductRepo(ctrl),
 				pvzLocker:     NewMockpvzLocker(ctrl),
+				metric:        NewMockmetrics(ctrl),
 			}
 
 			tc.prepare(m)
 
-			uc, err := New(m.trManager, m.receptionRepo, m.pvzLocker, m.productRepo)
+			uc, err := New(m.trManager, m.receptionRepo, m.pvzLocker, m.productRepo, m.metric)
 			require.NoError(t, err)
 
 			product, err := uc.AddProduct(context.Background(), tc.args.pvzID, tc.args.category)

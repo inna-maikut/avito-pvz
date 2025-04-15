@@ -17,12 +17,11 @@ type Config struct {
 	DatabasePassword string `required:"true" split_words:"true"`
 
 	// http server
-	ServerPort int `required:"true" split_words:"true"`
+	ServerPort        int `required:"true" split_words:"true"`
+	MetricsServerPort int `required:"true" split_words:"true"`
 }
 
 func Load() Config {
-	os.Getenv("SERVER_PORT")
-
 	prefix := ""
 	for range 5 {
 		if _, err := os.Stat(prefix + "go.mod"); err == nil {

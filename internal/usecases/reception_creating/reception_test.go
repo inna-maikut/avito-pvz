@@ -15,25 +15,31 @@ import (
 func TestNew(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		res, err := New(NewMocktrManager(ctrl), NewMockreceptionRepo(ctrl), NewMockpvzLocker(ctrl))
+		res, err := New(NewMocktrManager(ctrl), NewMockreceptionRepo(ctrl), NewMockpvzLocker(ctrl), NewMockmetrics(ctrl))
 		require.NoError(t, err)
 		assert.NotNil(t, res)
 	})
 	t.Run("error.first_nil", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		res, err := New(nil, NewMockreceptionRepo(ctrl), NewMockpvzLocker(ctrl))
+		res, err := New(nil, NewMockreceptionRepo(ctrl), NewMockpvzLocker(ctrl), NewMockmetrics(ctrl))
 		require.Error(t, err)
 		require.Nil(t, res)
 	})
 	t.Run("error.second_nil", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		res, err := New(NewMocktrManager(ctrl), nil, NewMockpvzLocker(ctrl))
+		res, err := New(NewMocktrManager(ctrl), nil, NewMockpvzLocker(ctrl), NewMockmetrics(ctrl))
 		require.Error(t, err)
 		require.Nil(t, res)
 	})
 	t.Run("error.third_nil", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		res, err := New(NewMocktrManager(ctrl), NewMockreceptionRepo(ctrl), nil)
+		res, err := New(NewMocktrManager(ctrl), NewMockreceptionRepo(ctrl), nil, NewMockmetrics(ctrl))
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+	t.Run("error.fourth_nil", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		res, err := New(NewMocktrManager(ctrl), NewMockreceptionRepo(ctrl), NewMockpvzLocker(ctrl), nil)
 		require.Error(t, err)
 		require.Nil(t, res)
 	})
@@ -44,6 +50,7 @@ func TestUseCase_CreateReception(t *testing.T) {
 		trManager     *MocktrManager
 		receptionRepo *MockreceptionRepo
 		pvzLocker     *MockpvzLocker
+		metric        *Mockmetrics
 	}
 	type args struct {
 		pvzID model.PVZID
@@ -82,6 +89,7 @@ func TestUseCase_CreateReception(t *testing.T) {
 						ReceptionStatus: model.ReceptionStatusInProgress,
 						ReceptedAt:      now,
 					}, nil)
+				m.metric.EXPECT().ReceptionCreatedCountInc()
 			},
 			args: args{
 				pvzID: ID1,
@@ -190,11 +198,12 @@ func TestUseCase_CreateReception(t *testing.T) {
 				trManager:     NewMocktrManager(ctrl),
 				receptionRepo: NewMockreceptionRepo(ctrl),
 				pvzLocker:     NewMockpvzLocker(ctrl),
+				metric:        NewMockmetrics(ctrl),
 			}
 
 			tc.prepare(m)
 
-			uc, err := New(m.trManager, m.receptionRepo, m.pvzLocker)
+			uc, err := New(m.trManager, m.receptionRepo, m.pvzLocker, m.metric)
 			require.NoError(t, err)
 
 			reception, err := uc.CreateReception(context.Background(), tc.args.pvzID)

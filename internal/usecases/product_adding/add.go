@@ -13,9 +13,10 @@ type UseCase struct {
 	receptionRepo receptionRepo
 	productRepo   productRepo
 	pvzLocker     pvzLocker
+	metric        metrics
 }
 
-func New(trManager trManager, receptionRepo receptionRepo, pvzLocker pvzLocker, productRepo productRepo) (*UseCase, error) {
+func New(trManager trManager, receptionRepo receptionRepo, pvzLocker pvzLocker, productRepo productRepo, metric metrics) (*UseCase, error) {
 	if trManager == nil {
 		return nil, errors.New("trManager is nil")
 	}
@@ -28,11 +29,15 @@ func New(trManager trManager, receptionRepo receptionRepo, pvzLocker pvzLocker, 
 	if productRepo == nil {
 		return nil, errors.New("productRepo is nil")
 	}
+	if metric == nil {
+		return nil, errors.New("metric is nil")
+	}
 	return &UseCase{
 		trManager:     trManager,
 		receptionRepo: receptionRepo,
 		productRepo:   productRepo,
 		pvzLocker:     pvzLocker,
+		metric:        metric,
 	}, nil
 }
 
@@ -60,6 +65,8 @@ func (uc *UseCase) AddProduct(ctx context.Context, pvzID model.PVZID, category m
 	if err != nil {
 		return model.Product{}, fmt.Errorf("trManager.Do: %w", err)
 	}
+
+	uc.metric.ProductAddedCountInc()
 
 	return product, nil
 }

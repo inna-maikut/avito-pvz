@@ -242,3 +242,63 @@ func (c *MockpvzLockerLockCall) DoAndReturn(f func(context.Context, model.PVZID)
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
+
+// Mockmetrics is a mock of metrics interface.
+type Mockmetrics struct {
+	ctrl     *gomock.Controller
+	recorder *MockmetricsMockRecorder
+	isgomock struct{}
+}
+
+// MockmetricsMockRecorder is the mock recorder for Mockmetrics.
+type MockmetricsMockRecorder struct {
+	mock *Mockmetrics
+}
+
+// NewMockmetrics creates a new mock instance.
+func NewMockmetrics(ctrl *gomock.Controller) *Mockmetrics {
+	mock := &Mockmetrics{ctrl: ctrl}
+	mock.recorder = &MockmetricsMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *Mockmetrics) EXPECT() *MockmetricsMockRecorder {
+	return m.recorder
+}
+
+// ReceptionCreatedCountInc mocks base method.
+func (m *Mockmetrics) ReceptionCreatedCountInc() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ReceptionCreatedCountInc")
+}
+
+// ReceptionCreatedCountInc indicates an expected call of ReceptionCreatedCountInc.
+func (mr *MockmetricsMockRecorder) ReceptionCreatedCountInc() *MockmetricsReceptionCreatedCountIncCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReceptionCreatedCountInc", reflect.TypeOf((*Mockmetrics)(nil).ReceptionCreatedCountInc))
+	return &MockmetricsReceptionCreatedCountIncCall{Call: call}
+}
+
+// MockmetricsReceptionCreatedCountIncCall wrap *gomock.Call
+type MockmetricsReceptionCreatedCountIncCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockmetricsReceptionCreatedCountIncCall) Return() *MockmetricsReceptionCreatedCountIncCall {
+	c.Call = c.Call.Return()
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockmetricsReceptionCreatedCountIncCall) Do(f func()) *MockmetricsReceptionCreatedCountIncCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockmetricsReceptionCreatedCountIncCall) DoAndReturn(f func()) *MockmetricsReceptionCreatedCountIncCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}

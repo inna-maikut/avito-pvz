@@ -10,3 +10,7 @@ import (
 type pvzRepo interface {
 	Register(ctx context.Context, pvz model.PVZ) error
 }
+
+type metrics interface {
+	PVZRegisteredCountInc()
+}

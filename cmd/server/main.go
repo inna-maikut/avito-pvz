@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"sync"
+	"syscall"
 	"time"
 
 	trmsqlx "github.com/avito-tech/go-transaction-manager/drivers/sqlx/v2"
@@ -22,6 +25,7 @@ import (
 	"github.com/inna-maikut/avito-pvz/internal/api/reception_create"
 	"github.com/inna-maikut/avito-pvz/internal/infrastructure/config"
 	"github.com/inna-maikut/avito-pvz/internal/infrastructure/jwt"
+	"github.com/inna-maikut/avito-pvz/internal/infrastructure/metrics"
 	"github.com/inna-maikut/avito-pvz/internal/infrastructure/middleware"
 	"github.com/inna-maikut/avito-pvz/internal/infrastructure/pg"
 	"github.com/inna-maikut/avito-pvz/internal/repository"
@@ -38,7 +42,7 @@ const (
 	readHeaderTimeout = time.Second
 )
 
-func main() { //nolint:gocognit
+func main() {
 	cfg := config.Load()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -49,6 +53,22 @@ func main() { //nolint:gocognit
 		logger = zap.Must(zap.NewDevelopment())
 	}
 	defer func() {
+		_ = logger.Sync()
+	}()
+
+	// Graceful shutdown - cancel context on signals SIGINT and SIGTERM
+	go func() {
+		sigChan := make(chan os.Signal, 1)
+		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+		<-sigChan
+
+		logger.Info("stopping...")
+
+		cancel()
+	}()
+
+	// catch init panics
+	defer func() {
 		if panicErr := recover(); panicErr != nil {
 			if typedErr, ok := panicErr.(error); ok {
 				logger.Error("panic error", zap.Error(typedErr))
@@ -56,9 +76,14 @@ func main() { //nolint:gocognit
 				logger.Error("panic", zap.Any("message", panicErr))
 			}
 		}
-
-		_ = logger.Sync()
 	}()
+
+	metric, err := metrics.New()
+	if err != nil {
+		panic(fmt.Errorf("create metrics: %w", err))
+	}
+
+	// Postgres DB and repositories
 
 	db, cancelDB, err := pg.NewDB(ctx, cfg)
 	if err != nil {
@@ -100,7 +125,7 @@ func main() { //nolint:gocognit
 		panic(fmt.Errorf("create dummy_authenticating use case: %w", err))
 	}
 
-	productAdding, err := product_adding.New(trManager, receptionRepo, pvzLocker, productRepo)
+	productAdding, err := product_adding.New(trManager, receptionRepo, pvzLocker, productRepo, metric)
 	if err != nil {
 		panic(fmt.Errorf("create product_adding use case: %w", err))
 	}
@@ -115,7 +140,7 @@ func main() { //nolint:gocognit
 		panic(fmt.Errorf("create pvz_list_getting use case: %w", err))
 	}
 
-	pvzRegistering, err := pvz_registering.New(pvzRepo)
+	pvzRegistering, err := pvz_registering.New(pvzRepo, metric)
 	if err != nil {
 		panic(fmt.Errorf("create pvz_registering use case: %w", err))
 	}
@@ -125,12 +150,13 @@ func main() { //nolint:gocognit
 		panic(fmt.Errorf("create reception_closing use case: %w", err))
 	}
 
-	receptionCreating, err := reception_creating.New(trManager, receptionRepo, pvzLocker)
+	receptionCreating, err := reception_creating.New(trManager, receptionRepo, pvzLocker, metric)
 	if err != nil {
 		panic(fmt.Errorf("create reception_creating use case: %w", err))
 	}
 
 	// Handlers
+
 	dummyLoginHandler, err := dummy_login.New(dummyAuthentication, logger)
 	if err != nil {
 		panic(fmt.Errorf("create dummy_login handler: %w", err))
@@ -166,6 +192,8 @@ func main() { //nolint:gocognit
 		panic(fmt.Errorf("create reception_create handler: %w", err))
 	}
 
+	// HTTP server set up
+
 	noAuthMW, err := middleware.CreateNoAuthMiddleware()
 	if err != nil {
 		panic(fmt.Errorf("create no auth middleware: %w", err))
@@ -187,18 +215,52 @@ func main() { //nolint:gocognit
 	m := http.NewServeMux()
 	m.Handle("POST /dummyLogin", noAuthMW(http.HandlerFunc(dummyLoginHandler.Handle)))
 	m.Handle("/", authMW(authMux))
+	handler := metric.HTTPServerMW(m)
 
+	var wg sync.WaitGroup
+
+	// metrics http server
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		metric.RunHTTPServer(ctx, cfg, logger)
+	}()
+
+	// http server
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		runHTTPServer(ctx, handler, cfg, logger)
+	}()
+
+	wg.Wait()
+	logger.Info("successful stop")
+}
+
+func runHTTPServer(ctx context.Context, handler http.Handler, cfg config.Config, logger *zap.Logger) {
 	s := &http.Server{
-		Handler:           m,
+		Handler:           handler,
 		Addr:              "0.0.0.0:" + strconv.Itoa(cfg.ServerPort),
 		ReadHeaderTimeout: readHeaderTimeout,
 	}
 
+	go func() {
+		<-ctx.Done()
+
+		shutdownCtx, shutdownRelease := context.WithTimeout(context.Background(), 10*time.Second)
+		defer shutdownRelease()
+
+		if shutdownErr := s.Shutdown(shutdownCtx); shutdownErr != nil {
+			shutdownErr = fmt.Errorf("HTTP shutdown error: %w", shutdownErr)
+			logger.Error("HTTP shutdown error", zap.Error(shutdownErr))
+		}
+	}()
+
 	logger.Info("starting http server...")
 
-	// And we serve HTTP until the world ends.
-	err = s.ListenAndServe()
-	if err != nil && !errors.Is(err, context.Canceled) {
-		panic(fmt.Errorf("http server ListenAndServe: %w", err))
+	err := s.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		err = fmt.Errorf("HTTP server ListenAndServe: %w", err)
+		logger.Error("HTTP server ListenAndServe", zap.Error(err))
 	}
 }

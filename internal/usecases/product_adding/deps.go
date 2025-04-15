@@ -22,3 +22,7 @@ type productRepo interface {
 type pvzLocker interface {
 	Lock(ctx context.Context, pvzID model.PVZID) error
 }
+
+type metrics interface {
+	ProductAddedCountInc()
+}
