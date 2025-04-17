@@ -43,7 +43,7 @@ func TestUseCase_Auth(t *testing.T) {
 		{
 			name: "success.moderator",
 			prepare: func(m *mocks) {
-				m.tokenProvider.EXPECT().CreateToken("", int64(0), model.UserRoleModerator).Return("654321", nil)
+				m.tokenProvider.EXPECT().CreateToken("", model.DefaultUserID, model.UserRoleModerator).Return("654321", nil)
 			},
 			args: args{
 				role: model.UserRoleModerator,
@@ -54,7 +54,7 @@ func TestUseCase_Auth(t *testing.T) {
 		{
 			name: "success.employee",
 			prepare: func(m *mocks) {
-				m.tokenProvider.EXPECT().CreateToken("", int64(0), model.UserRoleEmployee).Return("654321", nil)
+				m.tokenProvider.EXPECT().CreateToken("", model.DefaultUserID, model.UserRoleEmployee).Return("654321", nil)
 			},
 			args: args{
 				role: model.UserRoleEmployee,
@@ -65,7 +65,7 @@ func TestUseCase_Auth(t *testing.T) {
 		{
 			name: "error.token_provider.create_token",
 			prepare: func(m *mocks) {
-				m.tokenProvider.EXPECT().CreateToken("", int64(0), model.UserRoleEmployee).Return("", assert.AnError)
+				m.tokenProvider.EXPECT().CreateToken("", model.DefaultUserID, model.UserRoleEmployee).Return("", assert.AnError)
 			},
 			args: args{
 				role: model.UserRoleEmployee,

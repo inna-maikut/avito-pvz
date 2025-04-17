@@ -25,3 +25,11 @@ type Product struct {
 	Category    int16     `db:"category"`
 	AddedAt     time.Time `db:"added_at"`
 }
+
+type User struct {
+	ID         uuid.UUID `db:"id"`
+	Email      string    `db:"email"`
+	Password   string    `db:"password"`
+	Role       int16     `db:"user_role"`
+	CreateTime time.Time `db:"create_time"`
+}

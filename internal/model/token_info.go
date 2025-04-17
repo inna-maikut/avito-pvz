@@ -1,7 +1,7 @@
 package model
 
 type TokenInfo struct {
-	UserID   int64
+	UserID   UserID
 	Email    string
 	UserRole UserRole
 }

@@ -24,6 +24,7 @@ func TestMetrics_RunHTTPServer(t *testing.T) {
 	m, err := New()
 	require.NoError(t, err)
 	cfg := config.Config{
+		MetricsServerHost: "127.0.0.1",
 		MetricsServerPort: 9001,
 	}
 	done := make(chan struct{})
@@ -40,7 +41,7 @@ func TestMetrics_RunHTTPServer(t *testing.T) {
 		}))
 		s := http.Server{
 			Handler:           m.HTTPServerMW(mux),
-			Addr:              "0.0.0.0:9002",
+			Addr:              "127.0.0.1:9002",
 			ReadHeaderTimeout: time.Second,
 		}
 		go func() {

@@ -1,34 +1,48 @@
 package model
 
-import "testing"
+import (
+	"testing"
 
-func TestUserRole_Valid(t *testing.T) {
+	"github.com/stretchr/testify/require"
+)
+
+func TestParseUserRole(t *testing.T) {
 	tests := []struct {
-		name string
-		r    UserRole
-		want bool
+		name    string
+		arg     string
+		want    UserRole
+		wantErr bool
 	}{
 		{
-			name: "Valid.employee",
-			r:    UserRoleEmployee,
-			want: true,
+			name:    "Valid.moderator",
+			arg:     "moderator",
+			want:    UserRoleModerator,
+			wantErr: false,
 		},
 		{
-			name: "Valid.moderator",
-			r:    UserRoleModerator,
-			want: true,
+			name:    "Valid.employee",
+			arg:     "employee",
+			want:    UserRoleEmployee,
+			wantErr: false,
 		},
 		{
-			name: "invalid",
-			r:    UserRole("invalid"),
-			want: false,
+			name:    "invalid.0",
+			arg:     "invalid",
+			want:    UserRole(0),
+			wantErr: true,
+		},
+		{
+			name:    "empty",
+			arg:     "",
+			want:    UserRole(0),
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.r.Valid(); got != tt.want {
-				t.Errorf("Valid() = %v, want %v", got, tt.want)
-			}
+			res, err := ParseUserRole(tt.arg)
+			require.Equal(t, tt.wantErr, err != nil)
+			require.Equal(t, tt.want, res)
 		})
 	}
 }

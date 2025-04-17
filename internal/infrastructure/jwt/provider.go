@@ -41,11 +41,11 @@ func New(secret string) *Provider {
 	}
 }
 
-func (p *Provider) CreateToken(email string, userID int64, role model.UserRole) (string, error) {
+func (p *Provider) CreateToken(email string, userID model.UserID, role model.UserRole) (string, error) {
 	claims := jwt.MapClaims{
 		"email":  email,
-		"userID": userID,
-		"role":   role,
+		"userID": userID.UUID().String(),
+		"role":   role.String(),
 		"exp":    time.Now().Add(tokenLifetime).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -72,12 +72,16 @@ func (p *Provider) ParseToken(tokenStr string) (model.TokenInfo, error) {
 
 	claims, _ := token.Claims.(jwt.MapClaims)
 
-	userID, ok := claims["userID"].(float64)
+	rawUserID, ok := claims["userID"].(string)
 	if !ok {
 		return model.TokenInfo{}, ErrInvalidUserIDInJWTToken
 	}
+	userID, err := model.ParseUserID(string(rawUserID))
+	if err != nil {
+		return model.TokenInfo{}, ErrInvalidUserIDInJWTToken
+	}
 
-	username, ok := claims["email"].(string)
+	email, ok := claims["email"].(string)
 	if !ok {
 		return model.TokenInfo{}, ErrInvalidUsernameInJWTToken
 	}
@@ -86,14 +90,14 @@ func (p *Provider) ParseToken(tokenStr string) (model.TokenInfo, error) {
 	if !ok {
 		return model.TokenInfo{}, ErrInvalidRoleInJWTToken
 	}
-	role := model.UserRole(rawRole)
-	if !role.Valid() {
+	role, err := model.ParseUserRole(string(rawRole))
+	if err != nil {
 		return model.TokenInfo{}, ErrInvalidRoleInJWTToken
 	}
 
 	return model.TokenInfo{
-		UserID:   int64(userID),
-		Email:    username,
+		UserID:   userID,
+		Email:    email,
 		UserRole: role,
 	}, nil
 }

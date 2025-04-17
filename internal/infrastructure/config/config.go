@@ -17,8 +17,10 @@ type Config struct {
 	DatabasePassword string `required:"true" split_words:"true"`
 
 	// http server
-	ServerPort        int `required:"true" split_words:"true"`
-	MetricsServerPort int `required:"true" split_words:"true"`
+	ServerHost        string `required:"true" split_words:"true"`
+	ServerPort        int    `required:"true" split_words:"true"`
+	MetricsServerHost string `required:"true" split_words:"true"`
+	MetricsServerPort int    `required:"true" split_words:"true"`
 }
 
 func Load() Config {

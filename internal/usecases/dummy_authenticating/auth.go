@@ -22,7 +22,7 @@ func New(tokenProvider tokenProvider) (*UseCase, error) {
 }
 
 func (uc *UseCase) Auth(_ context.Context, role model.UserRole) (string, error) {
-	token, err := uc.tokenProvider.CreateToken("", 0, role)
+	token, err := uc.tokenProvider.CreateToken("", model.DefaultUserID, role)
 	if err != nil {
 		return "", fmt.Errorf("tokenProvider.CreateToken: %w", err)
 	}

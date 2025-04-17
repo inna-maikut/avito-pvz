@@ -22,6 +22,7 @@ func TestMetrics_RunHTTPServer(t *testing.T) {
 	defer cancel()
 
 	cfg := config.Config{
+		ServerHost: "127.0.0.1",
 		ServerPort: 9003,
 	}
 	done := make(chan struct{})

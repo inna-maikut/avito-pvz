@@ -37,9 +37,8 @@ func (h *Handler) Handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	role := model.UserRole(authRequest.Role)
-
-	if !role.Valid() {
+	role, err := model.ParseUserRole(string(authRequest.Role))
+	if err != nil {
 		api_handler.BadRequest(w, "invalid role")
 		return
 	}

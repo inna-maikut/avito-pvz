@@ -20,7 +20,7 @@ func (m *Metrics) RunHTTPServer(ctx context.Context, cfg config.Config, logger *
 
 	s := http.Server{
 		Handler:           mux,
-		Addr:              "0.0.0.0:" + strconv.Itoa(cfg.MetricsServerPort),
+		Addr:              cfg.MetricsServerHost + ":" + strconv.Itoa(cfg.MetricsServerPort),
 		ReadHeaderTimeout: time.Second,
 	}
 	go func() {

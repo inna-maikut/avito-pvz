@@ -13,10 +13,11 @@ import (
 
 func TestProvider_CreateToken(t *testing.T) {
 	secret := "secret"
+	userID := model.NewUserID()
 
 	type args struct {
 		email  string
-		userID int64
+		userID model.UserID
 		role   model.UserRole
 	}
 	tests := []struct {
@@ -29,7 +30,7 @@ func TestProvider_CreateToken(t *testing.T) {
 			name: "success.moderator",
 			args: args{
 				email:  "test@test.com",
-				userID: 1,
+				userID: userID,
 				role:   model.UserRoleModerator,
 			},
 			check: func(t *testing.T, got string) {
@@ -44,7 +45,7 @@ func TestProvider_CreateToken(t *testing.T) {
 				delete(claims, "exp")
 				assert.Equal(t, jwt.MapClaims{
 					"email":  "test@test.com",
-					"userID": float64(1),
+					"userID": userID.UUID().String(),
 					"role":   "moderator",
 				}, claims)
 			},
@@ -54,7 +55,7 @@ func TestProvider_CreateToken(t *testing.T) {
 			name: "success.employee",
 			args: args{
 				email:  "test@test.com",
-				userID: 2,
+				userID: userID,
 				role:   model.UserRoleEmployee,
 			},
 			check: func(t *testing.T, got string) {
@@ -69,7 +70,7 @@ func TestProvider_CreateToken(t *testing.T) {
 				delete(claims, "exp")
 				assert.Equal(t, jwt.MapClaims{
 					"email":  "test@test.com",
-					"userID": float64(2),
+					"userID": userID.UUID().String(),
 					"role":   "employee",
 				}, claims)
 			},
@@ -89,6 +90,7 @@ func TestProvider_CreateToken(t *testing.T) {
 func TestProvider_ParseToken(t *testing.T) {
 	secret := "secret"
 	exp := time.Now().Add(time.Hour * 72).Unix()
+	userID := model.NewUserID()
 
 	tests := []struct {
 		name     string
@@ -101,7 +103,7 @@ func TestProvider_ParseToken(t *testing.T) {
 			getToken: func(t *testing.T) string {
 				claims := jwt.MapClaims{
 					"email":  "email",
-					"userID": 123,
+					"userID": userID.UUID().String(),
 					"role":   "moderator",
 					"exp":    exp,
 				}
@@ -114,7 +116,7 @@ func TestProvider_ParseToken(t *testing.T) {
 			},
 			want: model.TokenInfo{
 				Email:    "email",
-				UserID:   123,
+				UserID:   userID,
 				UserRole: model.UserRoleModerator,
 			},
 			wantErr: false,
@@ -124,7 +126,7 @@ func TestProvider_ParseToken(t *testing.T) {
 			getToken: func(t *testing.T) string {
 				claims := jwt.MapClaims{
 					"email":  "email",
-					"userID": 123,
+					"userID": userID.UUID().String(),
 					"role":   "employee",
 					"exp":    exp,
 				}
@@ -137,7 +139,7 @@ func TestProvider_ParseToken(t *testing.T) {
 			},
 			want: model.TokenInfo{
 				Email:    "email",
-				UserID:   123,
+				UserID:   userID,
 				UserRole: model.UserRoleEmployee,
 			},
 			wantErr: false,
@@ -147,7 +149,7 @@ func TestProvider_ParseToken(t *testing.T) {
 			getToken: func(t *testing.T) string {
 				claims := jwt.MapClaims{
 					"email":  "email",
-					"userID": 123,
+					"userID": userID.UUID().String(),
 					"role":   "employee",
 					"exp":    exp,
 				}
@@ -166,7 +168,7 @@ func TestProvider_ParseToken(t *testing.T) {
 			getToken: func(t *testing.T) string {
 				claims := jwt.MapClaims{
 					"email":  "email",
-					"userID": 123,
+					"userID": userID.UUID().String(),
 					"role":   "employee",
 					"exp":    time.Now().Add(-time.Hour).Unix(),
 				}
@@ -200,11 +202,30 @@ func TestProvider_ParseToken(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "err.wrong_claims.user_id_wrong_type",
+			getToken: func(t *testing.T) string {
+				claims := jwt.MapClaims{
+					"email":  "email",
+					"userID": 1,
+					"role":   "employee",
+					"exp":    exp,
+				}
+				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+				tokenStr, err := token.SignedString([]byte(secret))
+				require.NoError(t, err)
+
+				return tokenStr
+			},
+			want:    model.TokenInfo{},
+			wantErr: true,
+		},
+		{
 			name: "err.wrong_claims.email",
 			getToken: func(t *testing.T) string {
 				claims := jwt.MapClaims{
 					"email":  123,
-					"userID": 123,
+					"userID": userID.UUID().String(),
 					"role":   "employee",
 					"exp":    exp,
 				}
@@ -223,7 +244,7 @@ func TestProvider_ParseToken(t *testing.T) {
 			getToken: func(t *testing.T) string {
 				claims := jwt.MapClaims{
 					"email":  "email",
-					"userID": 123,
+					"userID": userID.UUID().String(),
 					"exp":    exp,
 				}
 				token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -241,7 +262,7 @@ func TestProvider_ParseToken(t *testing.T) {
 			getToken: func(t *testing.T) string {
 				claims := jwt.MapClaims{
 					"email":  "email",
-					"userID": 123,
+					"userID": userID.UUID().String(),
 					"role":   "invalid",
 					"exp":    exp,
 				}

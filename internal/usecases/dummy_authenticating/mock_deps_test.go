@@ -41,7 +41,7 @@ func (m *MocktokenProvider) EXPECT() *MocktokenProviderMockRecorder {
 }
 
 // CreateToken mocks base method.
-func (m *MocktokenProvider) CreateToken(email string, userID int64, role model.UserRole) (string, error) {
+func (m *MocktokenProvider) CreateToken(email string, userID model.UserID, role model.UserRole) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateToken", email, userID, role)
 	ret0, _ := ret[0].(string)
@@ -68,13 +68,13 @@ func (c *MocktokenProviderCreateTokenCall) Return(arg0 string, arg1 error) *Mock
 }
 
 // Do rewrite *gomock.Call.Do
-func (c *MocktokenProviderCreateTokenCall) Do(f func(string, int64, model.UserRole) (string, error)) *MocktokenProviderCreateTokenCall {
+func (c *MocktokenProviderCreateTokenCall) Do(f func(string, model.UserID, model.UserRole) (string, error)) *MocktokenProviderCreateTokenCall {
 	c.Call = c.Call.Do(f)
 	return c
 }
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MocktokenProviderCreateTokenCall) DoAndReturn(f func(string, int64, model.UserRole) (string, error)) *MocktokenProviderCreateTokenCall {
+func (c *MocktokenProviderCreateTokenCall) DoAndReturn(f func(string, model.UserID, model.UserRole) (string, error)) *MocktokenProviderCreateTokenCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

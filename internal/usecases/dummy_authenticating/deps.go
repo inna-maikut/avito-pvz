@@ -6,5 +6,5 @@ import (
 )
 
 type tokenProvider interface {
-	CreateToken(email string, userID int64, role model.UserRole) (string, error)
+	CreateToken(email string, userID model.UserID, role model.UserRole) (string, error)
 }

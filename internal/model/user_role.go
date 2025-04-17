@@ -1,16 +1,30 @@
 package model
 
-type UserRole string
+import "errors"
+
+type UserRole int16
 
 const (
-	UserRoleModerator UserRole = "moderator"
-	UserRoleEmployee  UserRole = "employee"
+	UserRoleModerator UserRole = 1
+	UserRoleEmployee  UserRole = 2
 )
 
-func (r UserRole) Valid() bool {
-	if r == UserRoleModerator || r == UserRoleEmployee {
-		return true
+func (s UserRole) String() string {
+	switch s {
+	case UserRoleModerator:
+		return "moderator"
+	case UserRoleEmployee:
+		return "employee"
 	}
+	return ""
+}
 
-	return false
+func ParseUserRole(s string) (UserRole, error) {
+	switch s {
+	case "moderator":
+		return UserRoleModerator, nil
+	case "employee":
+		return UserRoleEmployee, nil
+	}
+	return UserRole(0), errors.New("role not found")
 }

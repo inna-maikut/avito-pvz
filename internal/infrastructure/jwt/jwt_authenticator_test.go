@@ -15,11 +15,12 @@ import (
 )
 
 func TestContext(t *testing.T) {
+	userID := model.NewUserID()
 	t.Run("success", func(t *testing.T) {
-		ctx := ContextWithTokenInfo(context.Background(), model.TokenInfo{UserID: 1})
+		ctx := ContextWithTokenInfo(context.Background(), model.TokenInfo{UserID: userID})
 
 		tokenInfo := TokenInfoFromContext(ctx)
-		assert.Equal(t, model.TokenInfo{UserID: 1}, tokenInfo)
+		assert.Equal(t, model.TokenInfo{UserID: userID}, tokenInfo)
 	})
 
 	t.Run("empty", func(t *testing.T) {
@@ -28,7 +29,7 @@ func TestContext(t *testing.T) {
 	})
 
 	t.Run("empty_if_has_key_empty_struct", func(t *testing.T) {
-		tokenInfo := TokenInfoFromContext(context.WithValue(context.Background(), struct{}{}, model.TokenInfo{UserID: 1})) //nolint:staticcheck
+		tokenInfo := TokenInfoFromContext(context.WithValue(context.Background(), struct{}{}, model.TokenInfo{UserID: userID})) //nolint:staticcheck
 		assert.Equal(t, model.TokenInfo{}, tokenInfo)
 	})
 }
@@ -67,6 +68,7 @@ func TestAuthenticate(t *testing.T) {
 		ctx   context.Context
 		input *openapi3filter.AuthenticationInput
 	}
+	userID := model.NewUserID()
 
 	tests := []struct {
 		name    string
@@ -91,11 +93,11 @@ func TestAuthenticate(t *testing.T) {
 				}
 			},
 			prepare: func(_ *testing.T, m *mocks) {
-				m.tokenProvider.EXPECT().ParseToken("asdf").Return(model.TokenInfo{UserID: 1}, nil)
+				m.tokenProvider.EXPECT().ParseToken("asdf").Return(model.TokenInfo{UserID: userID}, nil)
 			},
 			check: func(t *testing.T, args args) {
 				tokenInfo := TokenInfoFromContext(args.input.RequestValidationInput.Request.Context())
-				assert.Equal(t, model.TokenInfo{UserID: 1}, tokenInfo)
+				assert.Equal(t, model.TokenInfo{UserID: userID}, tokenInfo)
 			},
 			wantErr: false,
 		},

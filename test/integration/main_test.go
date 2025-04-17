@@ -24,7 +24,7 @@ func setUp() {
 
 func dummyLogin(t *testing.T, role model.UserRole) string {
 	resp := apiPost(t, "/dummyLogin", "", api.PostDummyLoginJSONBody{
-		Role: api.PostDummyLoginJSONBodyRole(role),
+		Role: api.PostDummyLoginJSONBodyRole(role.String()),
 	})
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)

@@ -17,18 +17,21 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/inna-maikut/avito-pvz/internal/api/dummy_login"
+	"github.com/inna-maikut/avito-pvz/internal/api/login"
 	"github.com/inna-maikut/avito-pvz/internal/api/product_add"
 	"github.com/inna-maikut/avito-pvz/internal/api/product_remove_last"
 	"github.com/inna-maikut/avito-pvz/internal/api/pvz_get"
 	"github.com/inna-maikut/avito-pvz/internal/api/pvz_register"
 	"github.com/inna-maikut/avito-pvz/internal/api/reception_close"
 	"github.com/inna-maikut/avito-pvz/internal/api/reception_create"
+	"github.com/inna-maikut/avito-pvz/internal/api/register"
 	"github.com/inna-maikut/avito-pvz/internal/infrastructure/config"
 	"github.com/inna-maikut/avito-pvz/internal/infrastructure/jwt"
 	"github.com/inna-maikut/avito-pvz/internal/infrastructure/metrics"
 	"github.com/inna-maikut/avito-pvz/internal/infrastructure/middleware"
 	"github.com/inna-maikut/avito-pvz/internal/infrastructure/pg"
 	"github.com/inna-maikut/avito-pvz/internal/repository"
+	"github.com/inna-maikut/avito-pvz/internal/usecases/authenticating"
 	"github.com/inna-maikut/avito-pvz/internal/usecases/dummy_authenticating"
 	"github.com/inna-maikut/avito-pvz/internal/usecases/product_adding"
 	"github.com/inna-maikut/avito-pvz/internal/usecases/product_removing"
@@ -36,6 +39,7 @@ import (
 	"github.com/inna-maikut/avito-pvz/internal/usecases/pvz_registering"
 	"github.com/inna-maikut/avito-pvz/internal/usecases/reception_closing"
 	"github.com/inna-maikut/avito-pvz/internal/usecases/reception_creating"
+	"github.com/inna-maikut/avito-pvz/internal/usecases/registering"
 )
 
 const (
@@ -118,11 +122,26 @@ func main() {
 		panic(fmt.Errorf("create pvz locker: %w", err))
 	}
 
+	userRepo, err := repository.NewUserRepository(db, trmsqlx.DefaultCtxGetter)
+	if err != nil {
+		panic(fmt.Errorf("create user repository: %w", err))
+	}
+
 	// Use cases
 
 	dummyAuthentication, err := dummy_authenticating.New(tokenProvider)
 	if err != nil {
 		panic(fmt.Errorf("create dummy_authenticating use case: %w", err))
+	}
+
+	authentication, err := authenticating.New(userRepo, tokenProvider)
+	if err != nil {
+		panic(fmt.Errorf("create authenticating use case: %w", err))
+	}
+
+	registration, err := registering.New(userRepo)
+	if err != nil {
+		panic(fmt.Errorf("create registering use case: %w", err))
 	}
 
 	productAdding, err := product_adding.New(trManager, receptionRepo, pvzLocker, productRepo, metric)
@@ -155,11 +174,21 @@ func main() {
 		panic(fmt.Errorf("create reception_creating use case: %w", err))
 	}
 
-	// Handlers
+	// API Handlers
 
 	dummyLoginHandler, err := dummy_login.New(dummyAuthentication, logger)
 	if err != nil {
 		panic(fmt.Errorf("create dummy_login handler: %w", err))
+	}
+
+	loginHandler, err := login.New(authentication, logger)
+	if err != nil {
+		panic(fmt.Errorf("create login handler: %w", err))
+	}
+
+	registerHandler, err := register.New(registration, logger)
+	if err != nil {
+		panic(fmt.Errorf("create register handler: %w", err))
 	}
 
 	productAddHandler, err := product_add.New(productAdding, logger)
@@ -214,6 +243,8 @@ func main() {
 
 	m := http.NewServeMux()
 	m.Handle("POST /dummyLogin", noAuthMW(http.HandlerFunc(dummyLoginHandler.Handle)))
+	m.Handle("POST /register", noAuthMW(http.HandlerFunc(loginHandler.Handle)))
+	m.Handle("POST /login", noAuthMW(http.HandlerFunc(registerHandler.Handle)))
 	m.Handle("/", authMW(authMux))
 	handler := metric.HTTPServerMW(m)
 
@@ -240,7 +271,7 @@ func main() {
 func runHTTPServer(ctx context.Context, handler http.Handler, cfg config.Config, logger *zap.Logger) {
 	s := &http.Server{
 		Handler:           handler,
-		Addr:              "0.0.0.0:" + strconv.Itoa(cfg.ServerPort),
+		Addr:              cfg.ServerHost + ":" + strconv.Itoa(cfg.ServerPort),
 		ReadHeaderTimeout: readHeaderTimeout,
 	}
 
