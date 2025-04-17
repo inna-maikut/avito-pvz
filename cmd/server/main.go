@@ -243,8 +243,8 @@ func main() {
 
 	m := http.NewServeMux()
 	m.Handle("POST /dummyLogin", noAuthMW(http.HandlerFunc(dummyLoginHandler.Handle)))
-	m.Handle("POST /register", noAuthMW(http.HandlerFunc(loginHandler.Handle)))
-	m.Handle("POST /login", noAuthMW(http.HandlerFunc(registerHandler.Handle)))
+	m.Handle("POST /login", noAuthMW(http.HandlerFunc(loginHandler.Handle)))
+	m.Handle("POST /register", noAuthMW(http.HandlerFunc(registerHandler.Handle)))
 	m.Handle("/", authMW(authMux))
 	handler := metric.HTTPServerMW(m)
 
