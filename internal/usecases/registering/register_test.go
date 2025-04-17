@@ -4,12 +4,27 @@ import (
 	"context"
 	"testing"
 
-	"github.com/inna-maikut/avito-pvz/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/inna-maikut/avito-pvz/internal/model"
 )
+
+func TestNew(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		res, err := New(NewMockuserRepo(ctrl))
+		require.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+	t.Run("error.first_nil", func(t *testing.T) {
+		res, err := New(nil)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+}
 
 func TestUseCase_Register(t *testing.T) {
 	type mocks struct {

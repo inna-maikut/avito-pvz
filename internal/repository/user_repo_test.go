@@ -7,10 +7,30 @@ import (
 	"testing"
 
 	trmsqlx "github.com/avito-tech/go-transaction-manager/drivers/sqlx/v2"
+	"github.com/jmoiron/sqlx"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/inna-maikut/avito-pvz/internal/model"
 )
+
+func TestNewUserRepository(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		res, err := NewUserRepository(&sqlx.DB{}, &trmsqlx.CtxGetter{})
+		require.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+	t.Run("error.first_nil", func(t *testing.T) {
+		res, err := NewUserRepository(nil, &trmsqlx.CtxGetter{})
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+	t.Run("error.second_nil", func(t *testing.T) {
+		res, err := NewUserRepository(&sqlx.DB{}, nil)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+}
 
 func Test_GetByEmail(t *testing.T) {
 	db := setUp(t)
